@@ -10,3 +10,7 @@ img{
 .margin-top{
 	margin-top: 7em;
 }
+
+#delete{
+	display: inline;
+}

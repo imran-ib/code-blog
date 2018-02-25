@@ -1,5 +1,8 @@
 const express = require("express");
 const bodyParser = require("body-parser");
+const methodOverride = require("method-override");
+const expressSanitizer = require("express-sanitizer");
+
 const mongoose = require("mongoose");
 const ejs = require("ejs");
 
@@ -13,6 +16,8 @@ app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs'); 
 app.use(express.static("public"));
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(expressSanitizer());
+app.use(methodOverride("_method"));
 // app.use(bodyParser.json());
 
 
@@ -54,6 +59,7 @@ app.get("/blogs/new" , function(req,res) {
 		// CREATE ROUTE
 
 app.post("/blogs" , function(req , res){
+	req.body.blog.body = req.sanitize(req.body.blog.body);
 	//create blog
 	
 	Blog.create(req.body.blog , function(err , newBlog){
@@ -79,7 +85,43 @@ app.post("/blogs" , function(req , res){
 		})
 });
 
+	// Edit Route
 
+app.get("/blogs/:id/edit" , function(req , res){
+	
+	Blog.findById(req.params.id , function(err , foundBlog){
+		if(err){
+			res.redirect("/blogs")
+		}else {
+			res.render("edit" , {blog: foundBlog});
+		}
+	});
+})
+
+	// UpDAte Route
+
+app.put("/blogs/:id" , function(req , res){
+	req.body.blog.body = req.sanitize(req.body.blog.body);
+	Blog.findByIdAndUpdate(req.params.id , req.body.blog , function(err , updatedBlog){
+		if(err){
+			res.redirect("/blogs")
+		} else{
+			res.redirect("/blogs/" + req.params.id);
+		}
+	});
+})
+
+//Delete Route
+
+app.delete("/blogs/:id" , function(req , res){
+	Blog.findByIdAndRemove(req.params.id , function(err){
+		if(err){
+			res.redirect("/blogs")
+		} else {
+			res.redirect("/blogs")
+		}
+	});
+});
 
 app.listen(8080 , function(){
 	console.log("Server is listning on Port 8080")
